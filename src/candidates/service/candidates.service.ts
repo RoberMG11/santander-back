@@ -7,7 +7,14 @@ import { CandidateResponseDto } from '../dto/CandidateResponseDto.dto';
 @Injectable()
 export class CandidatesService {
     private static idCounter = 1;
+    private candidates: CandidateResponseDto[] = [];
 
+    /**
+     * Process the file and saves the candidate
+     * @param CandidateRequestDto body
+     * @param Express.Multer.File file
+     * @returns CandidateResponseDto
+     */
     processFile(body: CandidateRequestDto, file: Express.Multer.File) {
         if (!file) {
             throw new BadRequestException("Excel file is required")
@@ -62,9 +69,22 @@ export class CandidatesService {
                 availability: excelRow["Availability"],
             }
 
+            // Verify no duplicate (case-insensitive)
+            const alreadyExists = this.candidates.some(existing =>
+                existing.name.toLowerCase() === body.name.toLowerCase() &&
+                existing.surname.toLowerCase() === body.surname.toLowerCase()
+            );
+
+            if (alreadyExists) {
+                throw new BadRequestException("Duplicate candidate: same name and surname already exist");
+            }
+
+            // We save the candidate
+            this.candidates.push(candidate);
+
             // Delete the file after processing
             fs.unlinkSync(file.path);
-            
+
             return candidate
         } catch (error) {
             // Delete the file after processing
@@ -75,5 +95,13 @@ export class CandidatesService {
             }
             throw new BadRequestException(`Error processing Excel file: ${error.message}`)
         }
+    }
+
+    /**
+     * Returns the list of candidates
+     * @returns CandidateResponseDto[]
+     */
+    getAllCandidates(): CandidateResponseDto[] {
+        return this.candidates;
     }
 }

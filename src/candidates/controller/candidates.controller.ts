@@ -1,9 +1,10 @@
-import { Controller, Post, UploadedFile, UseInterceptors, Body } from '@nestjs/common';
+import { Controller, Post, UploadedFile, UseInterceptors, Body, Get } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import { CandidatesService } from '../service/candidates.service';
 import { CandidateRequestDto } from '../dto/CandidateRequestDto.dto';
 import { extname } from 'path';
+import { CandidateResponseDto } from '../dto/CandidateResponseDto.dto';
 
 @Controller('candidates')
 export class CandidatesController {
@@ -33,5 +34,10 @@ export class CandidatesController {
     @UploadedFile() file: Express.Multer.File,
   ) {
     return this.candidatesService.processFile(body, file);
+  }
+
+  @Get()
+  getAllCandidates(): CandidateResponseDto[] {
+    return this.candidatesService.getAllCandidates();
   }
 }
